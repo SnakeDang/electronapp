@@ -10,7 +10,7 @@
     "dist": "electron-builder"
   },
   "build": {
-    "appId": "com.example.electron-video",
+    "appId": "showled.electron-video",
     "productName": "Electron Video",
     "directories": {
       "output": "dist"
@@ -20,7 +20,11 @@
     },
     "win": {
       "target": "nsis"
-    }
+    },
+    "extraResources": [
+      ".env",
+      "resources/*.*"
+    ]
   },
   "keywords": [],
   "author": "",

@@ -6,8 +6,12 @@ require('dotenv').config()
 const TOPIC_LED = process.env.TOPIC_LED,
 URL_MQTT = process.env.URL_MQTT,
 MQTT_USERNAME = process.env.MQTT_USERNAME,
-MQTT_PASS = process.env.MQTT_PASS;
+MQTT_PASS = process.env.MQTT_PASS,
+TOPIC_CHECK = process.env.TOPIC_CHECK,
+DISPLAY_SCREEN = +process.env.DISPLAY_SCREEN;
+
 let tempValue = '';
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 800,
@@ -37,7 +41,15 @@ function createWindow() {
 
   client.on('message', function (topic, message) {
     if (topic === TOPIC_LED) {
-      const win = BrowserWindow.getAllWindows()[0];
+     
+      let win; 
+      if(BrowserWindow.getAllWindows() >1)
+      {
+        win = BrowserWindow.getAllWindows()[DISPLAY_SCREEN];
+      }else{
+        win = BrowserWindow.getAllWindows()[0];
+      }
+
       if (win && !win.isDestroyed()) {
         const messageValue = message?.toString()
         if (tempValue != messageValue)
@@ -53,6 +65,19 @@ function createWindow() {
   globalShortcut.register('CommandOrControl+Q', () => {
     app.quit();
   });
+
+  function sendCheckValue() {
+    client.publish(TOPIC_CHECK, 'check', function (err) {
+      if (err) {
+        console.error('Error publishing message: ', err);
+      } else {
+        console.log('Message published successfully');
+      }
+    });
+  }
+
+  // Gửi giá trị "check" vào topic sau mỗi giây
+  setInterval(sendCheckValue, 1000);
 }
 
 app.whenReady().then(createWindow);
