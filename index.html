@@ -61,8 +61,10 @@
         backgroundImage.style.display = 'none';
         videoPlayer.src = url; // Update the video URL
         videoPlayer.load(); // Reload the video player to start playing the new video
+        videoPlayer.muted = false
       } else {
         videoPlayer.style.display = 'none';
+        videoPlayer.muted = true
         backgroundImage.style.display = 'block';
       }
     }

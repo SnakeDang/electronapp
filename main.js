@@ -51,7 +51,7 @@ function createWindow() {
       }
 
       if (win && !win.isDestroyed()) {
-        const messageValue = message?.toString()
+        const messageValue = message ? message.toString() : ''
         if (tempValue != messageValue)
         {
             win.webContents.executeJavaScript(`updateVideoUrl('${messageValue}')`);
@@ -84,7 +84,7 @@ function createWindow() {
           }
     
           if (win && !win.isDestroyed()) {
-            const messageValue = message?.toString()
+            const messageValue = message ? message.toString() : ''
             if (tempValue != messageValue)
             {
                 win.webContents.executeJavaScript(`updateVideoUrl('${messageValue}')`);
@@ -107,14 +107,19 @@ function createWindow() {
   // Gửi giá trị "check" vào topic sau mỗi giây
   setInterval(sendCheckValue, 1000);
 }
+try {
+  app.whenReady().then(createWindow);
 
-app.whenReady().then(createWindow);
+  app.on('window-all-closed', function () {
+    if (process.platform !== 'darwin') app.quit();
+  });
 
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit();
+  app.on('will-quit', () => {
+    // Unregister all shortcuts before quitting
+    globalShortcut.unregisterAll();
 });
 
-app.on('will-quit', () => {
-  // Unregister all shortcuts before quitting
-  globalShortcut.unregisterAll();
-});
+  
+} catch (error) {
+  
+}
