@@ -67,6 +67,34 @@ function createWindow() {
   });
 
   function sendCheckValue() {
+    if (!client || client.connected === false) {
+      console.log('Client not connected, reconnecting...');
+      client.reconnect(); // Reconnect if client is not connected
+      client.subscribe(TOPIC_LED); 
+
+      client.on('message', function (topic, message) {
+        if (topic === TOPIC_LED) {
+         
+          let win; 
+          if(BrowserWindow.getAllWindows() >1)
+          {
+            win = BrowserWindow.getAllWindows()[DISPLAY_SCREEN];
+          }else{
+            win = BrowserWindow.getAllWindows()[0];
+          }
+    
+          if (win && !win.isDestroyed()) {
+            const messageValue = message?.toString()
+            if (tempValue != messageValue)
+            {
+                win.webContents.executeJavaScript(`updateVideoUrl('${messageValue}')`);
+                tempValue = messageValue;
+            }
+          }
+        }
+      });
+    }
+
     client.publish(TOPIC_CHECK, 'check', function (err) {
       if (err) {
         console.error('Error publishing message: ', err);
