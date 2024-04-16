@@ -1,0 +1,204 @@
+const { app, BrowserWindow, globalShortcut } = require("electron");
+const uuidv4 = require("uuid");
+const mqtt = require("mqtt");
+const logToFile = require("./writelog");
+require("dotenv").config();
+
+const TOPIC_LED = process.env.TOPIC_LED,
+  URL_MQTT = process.env.URL_MQTT,
+  MQTT_USERNAME = process.env.MQTT_USERNAME,
+  MQTT_PASS = process.env.MQTT_PASS,
+  TOPIC_CHECK = process.env.TOPIC_CHECK,
+  DISPLAY_SCREEN = +process.env.DISPLAY_SCREEN;
+
+let tempValue = "";
+let client = null;
+const reconnectFunc = (client) =>
+  setTimeout(() => {
+    logToFile('conga dvt')
+    client.reconnect(); // Reconnect if client is not connected
+    client.subscribe(TOPIC_LED);
+    listenMessageMqtt(client);
+  }, 1000);
+
+function listenMessageMqtt(client) {
+  try {
+    client.on("message", function (topic, message) {
+      if (topic === TOPIC_LED) {
+        let win;
+        if (BrowserWindow.getAllWindows() > 1) {
+          win = BrowserWindow.getAllWindows()[DISPLAY_SCREEN];
+        } else {
+          win = BrowserWindow.getAllWindows()[0];
+        }
+
+        if (win && !win.isDestroyed()) {
+          const messageValue = message ? message.toString() : "";
+          if (tempValue != messageValue) {
+            win.webContents.executeJavaScript(
+              `updateVideoUrl('${messageValue}')`
+            );
+            tempValue = messageValue;
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.log(`Error: ${error}`);
+  }
+}
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    fullscreen: true,
+    autoHideMenuBar: true, // Hide the menu bar
+    webPreferences: {
+      nodeIntegration: true,
+    },
+  });
+
+  win.loadFile("index.html");
+
+  const id = uuidv4.v4();
+  const options = {
+    clientId: id, // Set your client ID
+    username: MQTT_USERNAME, // Set your username
+    password: MQTT_PASS, // Set your password
+  };
+
+  client = mqtt.connect(URL_MQTT, options); // Change this to your MQTT broker address
+
+  client.on("connect", function () {
+    clearTimeout(reconnectFunc);
+    console.log(client.connected);
+    client.subscribe(TOPIC_LED); // Subscribe to the topic where the video URL will be published
+  });
+
+  client.on("reconnect", () => {
+    reconnectFunc(client);
+  });
+
+  listenMessageMqtt(client);
+
+  // Register a global shortcut to quit the app when Ctrl+Q is pressed
+  globalShortcut.register("CommandOrControl+Q", () => {
+    app.quit();
+  });
+
+  // Gửi giá trị "check" vào topic sau mỗi giây
+  setInterval(() => {
+    try {
+      if (client && client.connected) {
+        client.publish(TOPIC_CHECK, "check", function (err) {
+          if (err) {
+            console.log("Error publishing message: ", err);
+          } else {
+            console.log("Message published successfully");
+          }
+        });
+      } else {
+        console.log("cái nịch");
+        console.log("cái nịch");
+        console.log("cái nịch");
+        console.log("cái nịch");
+      }
+    } catch (error) {
+      console.log("lỗi kết nối mqtt");
+    }
+  }, 1000);
+}
+try {
+  app.whenReady().then(createWindow);
+
+  app.on("window-all-closed", function () {
+    if (process.platform !== "darwin") app.quit();
+  });
+
+  app.on("will-quit", () => {
+    // Unregister all shortcuts before quitting
+    globalShortcut.unregisterAll();
+  });
+} catch (error) {}
+
+16:05:21 16/04/2024 - Attempting to reconnect...
+16:25:32 16/04/2024 - Attempting to reconnect...
+16:26:38 16/04/2024 - Attempting to reconnect...
+16:26:59 16/04/2024 - MQTT error: Error: connect ETIMEDOUT 10.14.17.245:8883
+16:26:59 16/04/2024 - Connection to MQTT broker closed
+16:27:52 16/04/2024 - Attempting to reconnect...
+16:30:16 16/04/2024 - Attempting to reconnect...
+16:30:37 16/04/2024 - MQTT error: Error: connect ETIMEDOUT 10.14.17.245:8883
+16:30:37 16/04/2024 - Connection to MQTT broker closed
+16:31:05 16/04/2024 - Attempting to reconnect...
+16:31:06 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:07 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:08 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:09 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:10 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:11 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:12 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:13 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:14 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:15 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:16 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:17 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:18 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:19 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:20 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:21 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:22 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:23 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:24 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:25 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:26 16/04/2024 - MQTT error: Error: connect ETIMEDOUT 10.14.17.245:8883
+16:31:26 16/04/2024 - Connection to MQTT broker closed
+16:31:26 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:27 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:28 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:29 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:30 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:31:31 16/04/2024 - Attempting to reconnect...
+16:32:21 16/04/2024 - Connection to MQTT broker closed
+16:32:21 16/04/2024 - MQTT error: Error: connect ETIMEDOUT 10.14.17.245:8883
+16:32:26 16/04/2024 - Attempting to reconnect...
+16:32:43 16/04/2024 - MQTT error: Error: connect ETIMEDOUT 10.14.17.245:8883
+16:32:43 16/04/2024 - Connection to MQTT broker closed
+16:32:48 16/04/2024 - Attempting to reconnect...
+16:33:05 16/04/2024 - MQTT error: Error: connect ETIMEDOUT 10.14.17.245:8883
+16:33:05 16/04/2024 - Connection to MQTT broker closed
+16:33:10 16/04/2024 - Attempting to reconnect...
+16:35:02 16/04/2024 - MQTT error: Error: connect ETIMEDOUT 10.14.17.245:8883
+16:35:02 16/04/2024 - Connection to MQTT broker closed
+16:35:31 16/04/2024 - Attempting to reconnect...
+16:35:32 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:33 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:34 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:35 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:36 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:37 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:38 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:39 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:40 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:41 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:42 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:43 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:44 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:45 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:46 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:47 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:48 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:49 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:50 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:51 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:52 16/04/2024 - MQTT error: Error: connect ETIMEDOUT 10.14.17.245:8883
+16:35:52 16/04/2024 - Connection to MQTT broker closed
+16:35:52 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:53 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:54 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:55 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:56 16/04/2024 - Error occurred while attempting to publish message: ReferenceError: TOPIC_CHECK is not defined
+16:35:57 16/04/2024 - Attempting to reconnect...
+16:36:14 16/04/2024 - MQTT error: Error: connect ETIMEDOUT 10.14.17.245:8883
+16:36:14 16/04/2024 - Connection to MQTT broker closed
+16:36:19 16/04/2024 - Attempting to reconnect...
