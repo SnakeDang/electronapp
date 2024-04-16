@@ -1,10 +1,12 @@
 const logToFile = require("./writelog");
 const uuidv4 = require("uuid");
-let reconnectInterval = null;
-function reconnectFunc(mqtt, client, configMqtt, tempValue, reconnectTimeout) {
+const {logErrorToTelegram} = require("./bot-telegram")
+function connectFunc(mqtt, client, configMqtt, tempValue, reconnectTimeout,reconnectInterval,BrowserWindow) {
+  
   if (!client || !client.connected) {
     clearInterval(reconnectInterval);
-    logToFile("Attempting to reconnect...");
+    logToFile("Attempting to connect...");
+    logErrorToTelegram("Attempting to connect")
     client = mqtt.connect(configMqtt.URL_MQTT, {
       clientId: uuidv4.v4(),
       username: configMqtt.MQTT_USERNAME,
@@ -13,6 +15,7 @@ function reconnectFunc(mqtt, client, configMqtt, tempValue, reconnectTimeout) {
 
     client.on("connect", function () {
       logToFile("Reconnected to MQTT broker");
+      logErrorToTelegram("Reconnected to MQTT broker")
       client.subscribe(configMqtt.TOPIC_LED);
     });
 
@@ -39,16 +42,18 @@ function reconnectFunc(mqtt, client, configMqtt, tempValue, reconnectTimeout) {
 
     client.on("error", function (error) {
       logToFile(`MQTT error: ${error}`);
+      logErrorToTelegram("Reconnected to MQTT broker")
     });
 
     client.on("close", function () {
       logToFile("Connection to MQTT broker closed");
+      logErrorToTelegram("Connection to MQTT broker closed")
       clearTimeout(reconnectTimeout);
-      reconnectTimeout = setTimeout(reconnectFunc, 5000); // Retry after 5 seconds
+      reconnectTimeout = setTimeout(connectFunc, 5000); // Retry after 5 seconds
     });
     reconnectInterval = setInterval(() => {
       try {
-        client.publish(TOPIC_CHECK, "check", function (err) {
+        client.publish(configMqtt.TOPIC_CHECK, "check", function (err) {
           if (err) {
             console.log("Error publishing message: " + err);
           } else {
@@ -64,4 +69,18 @@ function reconnectFunc(mqtt, client, configMqtt, tempValue, reconnectTimeout) {
   }
 }
 
-module.exports = reconnectFunc;
+function publishMessage(client,TOPIC_LED,message)
+{
+  try {
+    client.publish(TOPIC_LED,message, function (err) {
+      if (err) {
+        throw err
+      } else {
+       return true
+      }
+    });
+  } catch (error) {
+    throw error
+  }
+}
+module.exports = {publishMessage,connectFunc};
