@@ -9,6 +9,8 @@ const TOPIC_LED = process.env.TOPIC_LED,
   MQTT_PASS = process.env.MQTT_PASS,
   TOPIC_CHECK = process.env.TOPIC_CHECK,
   DISPLAY_SCREEN = +process.env.DISPLAY_SCREEN;
+
+TEMP_ARR_LOG_ERROR = [];
 function connectFunc(
   client,
   tempValue,
@@ -25,12 +27,16 @@ function connectFunc(
   }
   if (!client || !client.connected) {
     clearInterval(reconnectInterval);
+    TEMP_ARR_LOG_ERROR.length = 0;
     logToFile("Attempting to connect...");
+
     logErrorToTelegram("Attempting to connect");
 
     client.on("connect", function () {
       logToFile("Reconnected to MQTT broker");
+
       logErrorToTelegram("Reconnected to MQTT broker");
+
       client.subscribe(TOPIC_LED);
     });
 
@@ -56,12 +62,22 @@ function connectFunc(
     });
 
     client.on("error", function (error) {
-      logToFile(`MQTT error: ${error}`);
+      const errorMessage = `MQTT error: ${error}`;
+      if (!TEMP_ARR_LOG_ERROR.includes(errorMessage)) {
+        TEMP_ARR_LOG_ERROR.push(errorMessage);
+        logToFile(`MQTT error: ${error}`);
+      }
+
       // logErrorToTelegram("Reconnected to MQTT broker when error" + error);
     });
 
     client.on("close", function () {
-      logToFile("Connection to MQTT broker closed");
+      const errorMessage = "Connection to MQTT broker closed";
+      if (!TEMP_ARR_LOG_ERROR.includes(errorMessage)) {
+        TEMP_ARR_LOG_ERROR.push(errorMessage);
+        logToFile(errorMessage);
+      }
+
       // logErrorToTelegram("Connection to MQTT broker closed");
       clearTimeout(reconnectTimeout);
       reconnectTimeout = setTimeout(connectFunc, 5000); // Retry after 5 seconds
