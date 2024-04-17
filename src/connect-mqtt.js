@@ -1,29 +1,44 @@
 const logToFile = require("./writelog");
 const uuidv4 = require("uuid");
-const {logErrorToTelegram} = require("./bot-telegram")
-function connectFunc(mqtt, client, configMqtt, tempValue, reconnectTimeout,reconnectInterval,BrowserWindow) {
-  
+const mqtt = require("mqtt");
+const { logErrorToTelegram } = require("./bot-telegram");
+require("dotenv").config();
+const TOPIC_LED = process.env.TOPIC_LED,
+  URL_MQTT = process.env.URL_MQTT,
+  MQTT_USERNAME = process.env.MQTT_USERNAME,
+  MQTT_PASS = process.env.MQTT_PASS,
+  TOPIC_CHECK = process.env.TOPIC_CHECK,
+  DISPLAY_SCREEN = +process.env.DISPLAY_SCREEN;
+function connectFunc(
+  client,
+  tempValue,
+  reconnectTimeout,
+  reconnectInterval,
+  BrowserWindow
+) {
+  if (!client?.connected) {
+    client = mqtt.connect(URL_MQTT, {
+      clientId: uuidv4.v4(),
+      username: MQTT_USERNAME,
+      password: MQTT_PASS,
+    });
+  }
   if (!client || !client.connected) {
     clearInterval(reconnectInterval);
     logToFile("Attempting to connect...");
-    logErrorToTelegram("Attempting to connect")
-    client = mqtt.connect(configMqtt.URL_MQTT, {
-      clientId: uuidv4.v4(),
-      username: configMqtt.MQTT_USERNAME,
-      password: configMqtt.MQTT_PASS,
-    });
+    logErrorToTelegram("Attempting to connect");
 
     client.on("connect", function () {
       logToFile("Reconnected to MQTT broker");
-      logErrorToTelegram("Reconnected to MQTT broker")
-      client.subscribe(configMqtt.TOPIC_LED);
+      logErrorToTelegram("Reconnected to MQTT broker");
+      client.subscribe(TOPIC_LED);
     });
 
     client.on("message", function (topic, message) {
-      if (topic === configMqtt.TOPIC_LED) {
+      if (topic === TOPIC_LED) {
         let win;
         if (BrowserWindow.getAllWindows().length > 1) {
-          win = BrowserWindow.getAllWindows()[configMqtt.DISPLAY_SCREEN];
+          win = BrowserWindow.getAllWindows()[DISPLAY_SCREEN];
         } else {
           win = BrowserWindow.getAllWindows()[0];
         }
@@ -42,18 +57,18 @@ function connectFunc(mqtt, client, configMqtt, tempValue, reconnectTimeout,recon
 
     client.on("error", function (error) {
       logToFile(`MQTT error: ${error}`);
-      logErrorToTelegram("Reconnected to MQTT broker")
+      // logErrorToTelegram("Reconnected to MQTT broker when error" + error);
     });
 
     client.on("close", function () {
       logToFile("Connection to MQTT broker closed");
-      logErrorToTelegram("Connection to MQTT broker closed")
+      // logErrorToTelegram("Connection to MQTT broker closed");
       clearTimeout(reconnectTimeout);
       reconnectTimeout = setTimeout(connectFunc, 5000); // Retry after 5 seconds
     });
     reconnectInterval = setInterval(() => {
       try {
-        client.publish(configMqtt.TOPIC_CHECK, "check", function (err) {
+        client.publish(TOPIC_CHECK, "check", function (err) {
           if (err) {
             console.log("Error publishing message: " + err);
           } else {
@@ -69,18 +84,24 @@ function connectFunc(mqtt, client, configMqtt, tempValue, reconnectTimeout,recon
   }
 }
 
-function publishMessage(client,TOPIC_LED,message)
-{
+function publishMessage(client, TOPIC_LED, message) {
   try {
-    client.publish(TOPIC_LED,message, function (err) {
+    if (!client?.connected) {
+      client = mqtt.connect(URL_MQTT, {
+        clientId: uuidv4.v4(),
+        username: MQTT_USERNAME,
+        password: MQTT_PASS,
+      });
+    }
+    client.publish(TOPIC_LED, message, function (err) {
       if (err) {
-        throw err
+        throw err;
       } else {
-       return true
+        return true;
       }
     });
   } catch (error) {
-    throw error
+    throw error;
   }
 }
-module.exports = {publishMessage,connectFunc};
+module.exports = { publishMessage, connectFunc };
