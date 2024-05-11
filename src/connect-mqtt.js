@@ -2,6 +2,7 @@ const logToFile = require("./writelog");
 const uuidv4 = require("uuid");
 const mqtt = require("mqtt");
 const { logErrorToTelegram } = require("./bot-telegram");
+const getUrlVideoByValueMQTT = require("./get-url-by-value");
 require("dotenv").config();
 const TOPIC_LED = process.env.TOPIC_LED,
   URL_MQTT = process.env.URL_MQTT,
@@ -16,7 +17,8 @@ function connectFunc(
   tempValue,
   reconnectTimeout,
   reconnectInterval,
-  BrowserWindow
+  BrowserWindow,
+  listUrlVideoConfig
 ) {
   if (!client?.connected) {
     client = mqtt.connect(URL_MQTT, {
@@ -30,12 +32,12 @@ function connectFunc(
     TEMP_ARR_LOG_ERROR.length = 0;
     logToFile("Attempting to connect...");
 
-    logErrorToTelegram("Attempting to connect");
+    // logErrorToTelegram("Attempting to connect");
 
     client.on("connect", function () {
       logToFile("Reconnected to MQTT broker");
 
-      logErrorToTelegram("Reconnected to MQTT broker");
+      // logErrorToTelegram("Reconnected to MQTT broker");
 
       client.subscribe(TOPIC_LED);
     });
@@ -50,12 +52,18 @@ function connectFunc(
         }
 
         if (win && !win.isDestroyed()) {
-          const messageValue = message ? message.toString() : "";
-          if (tempValue != messageValue) {
+          const _value = message ? message.toString() : "";
+
+          const messageValue = getUrlVideoByValueMQTT(
+            _value,
+            listUrlVideoConfig
+          );
+
+          if (tempValue != _value) {
             win.webContents.executeJavaScript(
               `updateVideoUrl('${messageValue}')`
             );
-            tempValue = messageValue;
+            tempValue = _value;
           }
         }
       }

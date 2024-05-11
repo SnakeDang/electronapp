@@ -23,6 +23,7 @@
     },
     "extraResources": [
       ".env",
+      "config_video.json",
       "resources/*.*"
     ]
   },
