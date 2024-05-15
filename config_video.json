@@ -1,66 +1,66 @@
 [
   {
     "stt": 0,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1681176129_getup.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video1.mp4"
   },
   {
     "stt": 1,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1681176147_sleep.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video2.mp4"
   },
   {
     "stt": 2,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1681176177_video2.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video3.mp4"
   },
   {
     "stt": 3,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1681176205_video4.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video4.mp4"
   },
   {
     "stt": 4,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1681176267_video7.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video5.mp4"
   },
   {
     "stt": 5,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1681176234_video5.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video6.mp4"
   },
   {
     "stt": 6,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1681176321_video9.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video7.mp4"
   },
   {
     "stt": 7,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1681176355_video11.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video8.mp4"
   },
   {
     "stt": 8,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1681176403_langnghe.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video8.mp4"
   },
   {
     "stt": 9,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoLedFace/1699949738_aww_dinhnguong_mo.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video8.mp4"
   },
   {
     "stt": 10,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoFaceAdvertise/1702277130_xmas-v2.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video8.mp4"
   },
   {
     "stt": 11,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoFaceAdvertise/1710318643_treseme_mat_beso.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video8.mp4"
   },
   {
     "stt": 12,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoFaceAdvertise/1702634439_video_call_to_action_beso_dance-_fa.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video8.mp4"
   },
   {
     "stt": 13,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoFaceAdvertise/1701847523_tenant_-_owdays.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video8.mp4"
   },
   {
     "stt": 14,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoFaceAdvertise/1701847505_tenant_-skechers.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video8.mp4"
   },
   {
     "stt": 15,
-    "url": "http://mascotapi.thacoindustries.vn/Uploads/VideoFaceAdvertise/1701847428_tenant_-_phuc_long.mp4"
+    "url": "http://localhost:1234/Uploads/list-videos/video8.mp4"
   }
 ]

@@ -24,6 +24,7 @@
     "extraResources": [
       ".env",
       "config_video.json",
+      "video_loop_auto.json",
       "resources/*.*"
     ]
   },

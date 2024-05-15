@@ -61,7 +61,7 @@ function connectFunc(
 
           if (tempValue != _value) {
             win.webContents.executeJavaScript(
-              `updateVideoUrl('${messageValue}')`
+              `updateVideoUrl('${messageValue}','${true}')`
             );
             tempValue = _value;
           }

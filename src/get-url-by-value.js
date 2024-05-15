@@ -1,3 +1,4 @@
+require("dotenv").config();
 function getUrlVideoByValueMQTT(value, listVideo) {
   const result = listVideo.find((item) => {
     if (item.stt !== undefined) {
@@ -7,13 +8,8 @@ function getUrlVideoByValueMQTT(value, listVideo) {
     return false;
   });
   if (result === undefined) {
-    const url = listVideo[0]?.url ? listVideo[0].url : "";
-    console.log("000000000000000");
-    console.log("000000000000000");
-    console.log("000000000000000");
-    console.log(url);
-    return url;
+    return process.env.VIDEO_DEFAULT;
   }
-  return result?.url ? result.url : "";
+  return result?.url ? result.url : process.env.VIDEO_DEFAULT;
 }
 module.exports = getUrlVideoByValueMQTT;

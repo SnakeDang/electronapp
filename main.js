@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut } = require("electron");
+const { app, BrowserWindow, globalShortcut, screen } = require("electron");
 const TelegramBot = require("node-telegram-bot-api");
 const { publishMessage, connectFunc } = require("./src/connect-mqtt");
 const fetchDataFromAPI = require("./src/get-description-bot");
@@ -13,7 +13,10 @@ const AREA_NAME = process.env.AREA_NAME,
   TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN,
   API_DESCRIPTION_BOT = process.env.API_DESCRIPTION_BOT,
   TOPIC_LED = process.env.TOPIC_LED,
-  FILE_PATH = process.env.FILE_PATH;
+  FILE_PATH = process.env.FILE_PATH,
+  FILE_PATH_DEFAULT = process.env.FILE_PATH_DEFAULT,
+  VIDEO_DEFAULT = process.env.VIDEO_DEFAULT,
+  DISPLAY_SCREEN = +process.env.DISPLAY_SCREEN;
 let tempValue = "";
 let reconnectTimeout = null;
 let reconnectInterval = null;
@@ -21,10 +24,19 @@ let client = null;
 let bot = null;
 
 function createWindow() {
+  const displays = screen.getAllDisplays();
+  const externalDisplay = displays.find((display) => {
+    return display.bounds.x !== 0 || display.bounds.y !== 0;
+  });
+
   const win = new BrowserWindow({
     width: 800,
     height: 600,
+    x: +DISPLAY_SCREEN ? 0 : externalDisplay.bounds.x, // Set the x-coordinate for the second screen
+    y: +DISPLAY_SCREEN ? 0 : externalDisplay.bounds.y,
     fullscreen: true,
+    frame: true,
+    movable: true,
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: true,
@@ -45,6 +57,13 @@ function createWindow() {
     app.quit();
   });
   const listUrlVideoConfig = getValuesUrlVideo(FILE_PATH);
+  const data = getValuesUrlVideo(FILE_PATH_DEFAULT);
+
+  if (win && !win.isDestroyed()) {
+    const jsonData = JSON.stringify(data);
+    win.webContents.executeJavaScript(`callValueJsonFile(${jsonData})`);
+  }
+
   connectFunc(
     client,
     tempValue,
@@ -58,75 +77,6 @@ function createWindow() {
   // bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
   // bot.on("message", handleMessage);
 }
-
-// function handleMessage(msg) {
-//   const chatId = msg.chat.id;
-//   const messageText = msg.text.trim();
-//   const nameBot = messageText.split(":::")[0];
-//   if (nameBot === `[${AREA_NAME}] - [${AREA_TOPIC}]`) {
-//     const checkMessage = checkStringFormat(messageText);
-
-//     if (checkMessage) {
-//       const value = messageText.split(":::")[1];
-
-//       switch (value) {
-//         case "restart":
-//           connectFunc(
-//             client,
-//             tempValue,
-//             reconnectTimeout,
-//             reconnectInterval,
-//             BrowserWindow,
-//             listUrlVideoConfig
-//           );
-
-//           break;
-//         default:
-//           if (value.includes("sendMQTT=")) {
-//             const valueMQTT = value.split("sendMQTT=")[1];
-//             publishMessage(client, TOPIC_LED, valueMQTT)
-//               .then(() => {
-//                 bot.sendMessage(
-//                   chatId,
-//                   `Bạn vừa gửi xuống mqqt ${AREA_NAME} tại topic ${TOPIC_LED} thành công với giá trị: ${valueMQTT}`
-//                 );
-//               })
-//               .catch(() => {
-//                 bot.sendMessage(
-//                   chatId,
-//                   `Bạn vừa gửi xuống mqqt ${AREA_NAME} tại topic ${TOPIC_LED} thất bại với giá trị: ${valueMQTT}`
-//                 );
-//               });
-//           } else {
-//             bot.sendMessage(
-//               chatId,
-//               `Bạn giá trị bạn vừa gửi chưa có trong kịch bản thực hiện: ${messageText}`
-//             );
-//           }
-//           break;
-//       }
-//     } else {
-//       let description = "description";
-//       fetchDataFromAPI(API_DESCRIPTION_BOT).then((data) => {
-//         if (data) {
-//           description = data;
-//           bot.sendMessage(chatId, description).catch((error) => {
-//             logToFile(
-//               `Gửi log thất bại mô tả từ [${AREA_NAME}] - [${AREA_TOPIC}]`
-//             );
-//           });
-//         } else {
-//           description = "Thất bại trong việc lấy mô tả từ api";
-//           bot.sendMessage(chatId, description).catch((error) => {
-//             logToFile(
-//               `Gửi log thất bại mô tả từ [${AREA_NAME}] - [${AREA_TOPIC}]`
-//             );
-//           });
-//         }
-//       });
-//     }
-//   }
-// }
 
 app.whenReady().then(createWindow);
 
