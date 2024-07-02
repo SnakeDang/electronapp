@@ -16,7 +16,9 @@ const AREA_NAME = process.env.AREA_NAME,
   FILE_PATH = process.env.FILE_PATH,
   FILE_PATH_DEFAULT = process.env.FILE_PATH_DEFAULT,
   VIDEO_DEFAULT = process.env.VIDEO_DEFAULT,
-  DISPLAY_SCREEN = +process.env.DISPLAY_SCREEN;
+  NUMBER_LOOP_VIDEO = process.env.NUMBER_LOOP_VIDEO,
+  DISPLAY_SCREEN =
+    +process.env.DISPLAY_SCREEN < 1 ? 0 : +process.env.DISPLAY_SCREEN - 1;
 let tempValue = "";
 let reconnectTimeout = null;
 let reconnectInterval = null;
@@ -32,8 +34,8 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
-    x: +DISPLAY_SCREEN ? 0 : externalDisplay.bounds.x, // Set the x-coordinate for the second screen
-    y: +DISPLAY_SCREEN ? 0 : externalDisplay.bounds.y,
+    x: displays[DISPLAY_SCREEN]?.bounds?.x, // Set the x-coordinate for the second screen
+    y: displays[DISPLAY_SCREEN]?.bounds?.y,
     fullscreen: true,
     frame: true,
     movable: true,
@@ -61,7 +63,9 @@ function createWindow() {
 
   if (win && !win.isDestroyed()) {
     const jsonData = JSON.stringify(data);
-    win.webContents.executeJavaScript(`callValueJsonFile(${jsonData})`);
+    win.webContents.executeJavaScript(
+      `callValueJsonFile(${jsonData},${NUMBER_LOOP_VIDEO})`
+    );
   }
 
   connectFunc(

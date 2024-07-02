@@ -9,10 +9,10 @@
         margin: 0;
         overflow: hidden;
         background-color: #000; /* Set background color to black */
-        /* cursor: none; */
+        cursor: none;
       }
       * {
-        /* cursor: none !important; */
+        cursor: none !important;
       }
       #videoContainer {
         width: 100%;
@@ -57,13 +57,14 @@
       let currentVideoIndex = 0; // Track the index of the current video
       let loopCount = 0; // Track the number of times the video has looped
       let videos = [];
+      let numberLoopVideo = 2;
       let firstTime = true;
 
       videoPlayer.controls = false; // Hide default controls
 
-      function callValueJsonFile(data) {
+      function callValueJsonFile(data, numberLoopEnv) {
         videos = data;
-
+        numberLoopVideo = numberLoopEnv;
         playNextVideo();
       }
 
@@ -87,25 +88,25 @@
         "ended",
         function () {
           loopCount++;
-          if (loopCount < 2) {
+          if (loopCount < numberLoopVideo) {
             // this.currentTime = 0;
-            this.classList.add("video-blur"); // Thêm lớp để làm mờ video
+            //this.classList.add("video-blur"); // Thêm lớp để làm mờ video
             this.load();
             // Wait for the video to reset
-            setTimeout(() => {
-              this.classList.remove("video-blur");
-            }, 1000);
+            // setTimeout(() => {
+            //   this.classList.remove("video-blur");
+            // }, 1000);
           } else {
             if (firstTime) {
               currentVideoIndex = 0;
               firstTime = false;
             } else currentVideoIndex = (currentVideoIndex + 1) % videos.length;
             // this.currentTime = 0;
-            this.classList.add("video-blur");
+            //this.classList.add("video-blur");
             playNextVideo();
-            setTimeout(() => {
-              this.classList.remove("video-blur");
-            }, 1000);
+            // setTimeout(() => {
+            //   this.classList.remove("video-blur");
+            // }, 1000);
           }
         },
         false
