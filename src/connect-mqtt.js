@@ -3,13 +3,20 @@ const uuidv4 = require("uuid");
 const mqtt = require("mqtt");
 const { logErrorToTelegram } = require("./bot-telegram");
 const getUrlVideoByValueMQTT = require("./get-url-by-value");
+const {
+  Singleton,
+  CONFIG_MQTT: {
+    MQTT_PASS,
+    MQTT_USERNAME,
+    TOPIC_CHECK,
+    TOPIC_LED,
+    URL_MQTT,
+    TOPIC_STOP,
+  },
+  CONFIG_APP: { API_URL },
+} = require("./constant");
+const { getListVideoFromMqtt } = require("./connect-sql-server");
 require("dotenv").config();
-const TOPIC_LED = process.env.TOPIC_LED,
-  URL_MQTT = process.env.URL_MQTT,
-  MQTT_USERNAME = process.env.MQTT_USERNAME,
-  MQTT_PASS = process.env.MQTT_PASS,
-  TOPIC_CHECK = process.env.TOPIC_CHECK,
-  DISPLAY_SCREEN = +process.env.DISPLAY_SCREEN;
 
 TEMP_ARR_LOG_ERROR = [];
 function connectFunc(
@@ -17,9 +24,9 @@ function connectFunc(
   tempValue,
   reconnectTimeout,
   reconnectInterval,
-  BrowserWindow,
-  listUrlVideoConfig
+  win
 ) {
+  console.log("jjjjjjjjjj", Singleton.list);
   if (!client?.connected) {
     client = mqtt.connect(URL_MQTT, {
       clientId: uuidv4.v4(),
@@ -40,31 +47,46 @@ function connectFunc(
       // logErrorToTelegram("Reconnected to MQTT broker");
 
       client.subscribe(TOPIC_LED);
+      client.subscribe(TOPIC_STOP);
     });
 
-    client.on("message", function (topic, message) {
+    client.on("message", async function (topic, message) {
+      console.log({ topic, win });
       if (topic === TOPIC_LED) {
-        let win;
-        if (BrowserWindow.getAllWindows().length > 1) {
-          win = BrowserWindow.getAllWindows()[DISPLAY_SCREEN];
-        } else {
-          win = BrowserWindow.getAllWindows()[0];
-        }
-
         if (win && !win.isDestroyed()) {
           const _value = message ? message.toString() : "";
 
-          const messageValue = getUrlVideoByValueMQTT(
-            _value,
-            listUrlVideoConfig
-          );
+          const messageValue = await getListVideoFromMqtt(+_value);
 
-          if (tempValue != _value) {
+          // if (tempValue != _value) {
+          if (messageValue?.length > 0) {
+            messageValue.forEach((element) => {
+              element.url = API_URL + element?.url;
+            });
+
             win.webContents.executeJavaScript(
-              `updateVideoUrl('${messageValue}','${true}')`
+              `callValueMqtt(${JSON.stringify(messageValue)})`
             );
-            tempValue = _value;
           }
+
+          //   tempValue = _value;
+          // }
+        }
+      }
+      if (topic === TOPIC_STOP) {
+        if (win && !win.isDestroyed()) {
+          const _value = message ? message.toString() : "";
+          console.log(_value);
+          console.log('99999999999999999999');
+          console.log('99999999999999999999');
+          console.log('99999999999999999999');
+          // if (tempValue != _value) {
+          if (_value === "stop")
+            win.webContents.executeJavaScript(
+              `callValueJsonFile(${JSON.stringify(Singleton.list)},'${true}')`
+            );
+          tempValue = _value;
+          // }
         }
       }
     });

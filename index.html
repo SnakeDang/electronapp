@@ -56,30 +56,40 @@
       const videoContainer = document.getElementById("videoContainer");
       let currentVideoIndex = 0; // Track the index of the current video
       let loopCount = 0; // Track the number of times the video has looped
-      let videos = [];
+      let _videos = null;
+      let _videosMqtt = null;
       let numberLoopVideo = 2;
       let firstTime = true;
+      let isVideosDefault = true;
 
       videoPlayer.controls = false; // Hide default controls
 
-      function callValueJsonFile(data, numberLoopEnv) {
-        videos = data;
-        numberLoopVideo = numberLoopEnv;
-        playNextVideo();
+      function callValueJsonFile(data, _firstTime = null) {
+        _videos = data;
+        playNextVideo(data, _firstTime);
+      }
+      function callValueMqtt(data) {
+        _videosMqtt = data;
+        isVideosDefault = false;
+        playNextVideo(data, true);
       }
 
-      function playNextVideo() {
+      function playNextVideo(videos, _firstTime = null) {
         let nextVideoIndex = 0;
+        firstTime = _firstTime !== null ? !!_firstTime : firstTime;
         if (firstTime) {
           nextVideoIndex = 0;
-        } else nextVideoIndex = (currentVideoIndex + 1) % videos.length;
+        } else {
+          nextVideoIndex = (currentVideoIndex + 1) % videos.length;
+        }
         const video = videos[nextVideoIndex];
         if (video && video.url) {
           updateVideoUrl(video.url);
+          numberLoopVideo = video?.repeat || numberLoopVideo;
           loopCount = 0;
         } else {
           currentVideoIndex = nextVideoIndex;
-          playNextVideo();
+          playNextVideo(videos);
         }
       }
 
@@ -100,10 +110,29 @@
             if (firstTime) {
               currentVideoIndex = 0;
               firstTime = false;
-            } else currentVideoIndex = (currentVideoIndex + 1) % videos.length;
+            } else {
+              if (isVideosDefault) {
+                currentVideoIndex = (currentVideoIndex + 1) % _videos.length;
+              } else {
+                const _currentVideoIndex = currentVideoIndex + 1;
+                if (_currentVideoIndex === _videosMqtt.length) {
+                  currentVideoIndex = 0;
+                  firstTime = true;
+                  videos = _videos;
+                } else {
+                  currentVideoIndex =
+                    (currentVideoIndex + 1) % _videosMqtt.length;
+                }
+              }
+            }
             // this.currentTime = 0;
             //this.classList.add("video-blur");
-            playNextVideo();
+            if (isVideosDefault) {
+              playNextVideo(_videos);
+            } else {
+              playNextVideo(_videosMqtt);
+            }
+
             // setTimeout(() => {
             //   this.classList.remove("video-blur");
             // }, 1000);
@@ -112,8 +141,8 @@
         false
       );
       videoPlayer.addEventListener("error", function () {
-        currentVideoIndex = (currentVideoIndex + 1) % videos.length; // Move to the next video in the list
-        playNextVideo();
+        currentVideoIndex = (currentVideoIndex + 1) % _videos.length; // Move to the next video in the list
+        playNextVideo(_videos);
       });
 
       function updateVideoUrl(url, mqttCall = false) {
