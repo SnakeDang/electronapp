@@ -12,6 +12,7 @@ const {
     TOPIC_LED,
     URL_MQTT,
     TOPIC_STOP,
+    TOPIC_LED_PHOTO,
   },
   CONFIG_APP: { API_URL },
 } = require("./constant");
@@ -26,7 +27,6 @@ function connectFunc(
   reconnectInterval,
   win
 ) {
-  console.log("jjjjjjjjjj", Singleton.list);
   if (!client?.connected) {
     client = mqtt.connect(URL_MQTT, {
       clientId: uuidv4.v4(),
@@ -48,46 +48,64 @@ function connectFunc(
 
       client.subscribe(TOPIC_LED);
       client.subscribe(TOPIC_STOP);
+      client.subscribe(TOPIC_LED_PHOTO);
     });
 
     client.on("message", async function (topic, message) {
-      console.log({ topic, win });
-      if (topic === TOPIC_LED) {
-        if (win && !win.isDestroyed()) {
-          const _value = message ? message.toString() : "";
+      // topic led
+      switch (topic) {
+        case TOPIC_LED:
+          if (win && !win.isDestroyed()) {
+            const _value = message ? message.toString() : "";
+            try {
+              const messageValue = await getListVideoFromMqtt(+_value);
 
-          const messageValue = await getListVideoFromMqtt(+_value);
+              // if (tempValue != _value) {
+              if (messageValue?.length > 0) {
+                messageValue.forEach((element) => {
+                  element.url = API_URL + element?.url;
+                });
 
-          // if (tempValue != _value) {
-          if (messageValue?.length > 0) {
-            messageValue.forEach((element) => {
-              element.url = API_URL + element?.url;
-            });
-
-            win.webContents.executeJavaScript(
-              `callValueMqtt(${JSON.stringify(messageValue)})`
-            );
+                win.webContents.executeJavaScript(
+                  `callValueMqtt(${JSON.stringify(messageValue)})`
+                );
+              }
+            } catch (error) {}
           }
+          break;
+        case TOPIC_STOP:
+          if (win && !win.isDestroyed()) {
+            const _value = message ? message.toString() : "";
 
-          //   tempValue = _value;
-          // }
-        }
-      }
-      if (topic === TOPIC_STOP) {
-        if (win && !win.isDestroyed()) {
-          const _value = message ? message.toString() : "";
-          console.log(_value);
-          console.log('99999999999999999999');
-          console.log('99999999999999999999');
-          console.log('99999999999999999999');
-          // if (tempValue != _value) {
-          if (_value === "stop")
-            win.webContents.executeJavaScript(
-              `callValueJsonFile(${JSON.stringify(Singleton.list)},'${true}')`
-            );
-          tempValue = _value;
-          // }
-        }
+            // if (tempValue != _value) {
+            if (_value === "stop")
+              win.webContents.executeJavaScript(
+                `callValueJsonFile(${JSON.stringify(Singleton.list)},'${true}')`
+              );
+            tempValue = _value;
+            // }
+          }
+          break;
+        case TOPIC_LED_PHOTO:
+          if (win && !win.isDestroyed()) {
+            const _value = message ? message.toString() : "";
+            try {
+              const messageValue = await getListVideoFromMqtt(+_value);
+              console.log(messageValue);
+              // if (tempValue != _value) {
+              if (messageValue?.length > 0) {
+                messageValue.forEach((element) => {
+                  element.url = API_URL + element?.url;
+                });
+
+                win.webContents.executeJavaScript(
+                  `callValueMqttPhoto(${JSON.stringify(messageValue)})`
+                );
+              }
+            } catch (error) {}
+          }
+        default:
+          break;
       }
     });
 

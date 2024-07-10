@@ -61,16 +61,25 @@
       let numberLoopVideo = 2;
       let firstTime = true;
       let isVideosDefault = true;
+      let isVideoPhoto = false
 
       videoPlayer.controls = false; // Hide default controls
 
       function callValueJsonFile(data, _firstTime = null) {
         _videos = data;
+        isVideosDefault = true;
         playNextVideo(data, _firstTime);
       }
       function callValueMqtt(data) {
         _videosMqtt = data;
         isVideosDefault = false;
+        isVideoPhoto = false;
+        playNextVideo(data, true);
+      }
+      function callValueMqttPhoto(data) {
+        _videosMqtt = data;
+        isVideosDefault = false;
+        isVideoPhoto = true;
         playNextVideo(data, true);
       }
 
@@ -117,8 +126,11 @@
                 const _currentVideoIndex = currentVideoIndex + 1;
                 if (_currentVideoIndex === _videosMqtt.length) {
                   currentVideoIndex = 0;
+                  if(!isVideoPhoto)
+                    isVideosDefault = true;
+                  
                   firstTime = true;
-                  videos = _videos;
+                  
                 } else {
                   currentVideoIndex =
                     (currentVideoIndex + 1) % _videosMqtt.length;

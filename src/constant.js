@@ -6,6 +6,7 @@ const CONFIG_MQTT = {
   MQTT_USERNAME: process.env.MQTT_USERNAME,
   MQTT_PASS: process.env.MQTT_PASS,
   TOPIC_CHECK: process.env.TOPIC_CHECK,
+  TOPIC_LED_PHOTO: process.env.TOPIC_LED_PHOTO,
 };
 
 const CONFIG_BOT = {
